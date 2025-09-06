@@ -102,47 +102,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         f"Error: {e}\r\n"
                     )
 
-                # "name=Jack&score=0.09&timestamp="
-                body = lines[-1] #it's the last line
-                print(f"POST body: {body}")
-
-                try:
-                    # extracting name and bac
-                    name = body.split("&")[0].split("=")[1].strip().replace(",", "")
-                    bac = float(body.split("&")[1].split("=")[1])
-
-                    # write out to csv, from path ~/breath/ to ~/
-                    # just figure out correct place for entry each write
-                    og_df = load_csv()
-
-                    # now binary search for entry position
-                    bac_list = og_df["bac"].tolist()
-                    insert_index = bin_search(bac_list, bac)
-
-                    # new row inserting
-                    new_row = {"name": name, "bac": bac}
-                    top = og_df.iloc[:insert_index]
-                    bottom = og_df.iloc[insert_index:]
-                    og_df = pd.concat([top, pd.DataFrame([new_row]), bottom]).reset_index(drop=True)
-
-                    og_df.to_csv("../namesBac.csv", index=False)
-                    response = (
-                        "HTTP/1.1 200 OK\r\n"
-                        "Content-type: text/plain\r\n"
-                        "Connection: close\r\n"
-                        "\r\n"
-                        "Success\r\n"
-                    )
-
-                except Exception as e:
-                    response = (
-                        "HTTP/1.1 400 Error\r\n"
-                        "Content-type: text/plain\r\n"
-                        "Connection: close\r\n"
-                        "\r\n"
-                        f"Error: {e}\r\n"
-                    )
-
             if method == "GET" and (path == "/leaderboard" or path == "/"):
                 try:
                     og_df = load_csv()
