@@ -143,7 +143,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         f"Error: {e}\r\n"
                     )
 
-            if method == "GET" and path == "/leaderboard":
+            if method == "GET" and (path == "/leaderboard" or path == "/"):
                 try:
                     og_df = load_csv()
 
