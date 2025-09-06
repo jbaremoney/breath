@@ -1,6 +1,7 @@
 import os
 import socket
 import pandas as pd
+import time
 
 HOST ='' # just 0.0.0.0 - all avail channels ie lan, eth, etc. as opposed to just picking one channel
 PORT = 8080 # dev port
@@ -54,7 +55,54 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             print(f"Method: {method}, Path: {path}")
 
             if method == "POST" and path == "/submit":
-                # "name=Jack&score=0.09"
+                # Example body: "name=Jack&score=0.09&timestamp=1736210521"
+                body = lines[-1]
+                print(f"POST body: {body}")
+
+                try:
+                    params = dict(p.split("=") for p in body.split("&"))
+                    name = params.get("name", "").strip().replace(",", "")
+                    bac = float(params.get("score", "0"))
+
+                    # use provided timestamp if valid, else current unix time
+                    ts = params.get("timestamp")
+                    if ts and ts.isdigit():
+                        timestamp = int(ts)
+                    else:
+                        timestamp = int(time.time())
+
+                    # load leaderboard
+                    og_df = load_csv()
+
+                    # insert row at correct place
+                    bac_list = og_df["bac"].tolist() if "bac" in og_df else []
+                    insert_index = bin_search(bac_list, bac)
+
+                    new_row = {"name": name, "bac": bac, "timestamp": timestamp}
+                    top = og_df.iloc[:insert_index]
+                    bottom = og_df.iloc[insert_index:]
+                    og_df = pd.concat([top, pd.DataFrame([new_row]), bottom]).reset_index(drop=True)
+
+                    og_df.to_csv("../namesBac.csv", index=False)
+
+                    response = (
+                        "HTTP/1.1 200 OK\r\n"
+                        "Content-Type: text/plain\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                        "Success\r\n"
+                    )
+
+                except Exception as e:
+                    response = (
+                        "HTTP/1.1 400 Error\r\n"
+                        "Content-Type: text/plain\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                        f"Error: {e}\r\n"
+                    )
+
+                # "name=Jack&score=0.09&timestamp="
                 body = lines[-1] #it's the last line
                 print(f"POST body: {body}")
 
@@ -97,31 +145,33 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             if method == "GET" and path == "/leaderboard":
                 try:
-                    # load the leaderboard
                     og_df = load_csv()
 
-                    # convert DataFrame into an HTML table
-                    html_table = og_df.to_html(index=False, float_format="%.3f")
+                    if "timestamp" in og_df:
+                        og_df["time"] = pd.to_datetime(og_df["timestamp"], unit="s")
 
-                    # wrap in simple HTML page
+                    html_table = og_df[["name", "bac", "time"]].to_html(
+                        index=False, float_format="%.3f"
+                    )
+
                     html_page = f"""
-                        <html>
-                        <head>
-                            <title>Breathalyzer Leaderboard</title>
-                            <style>
-                                body {{ font-family: Arial, sans-serif; background: #f9f9f9; }}
-                                h1 {{ text-align: center; }}
-                                table {{ margin: auto; border-collapse: collapse; }}
-                                th, td {{ border: 1px solid #ccc; padding: 8px 12px; }}
-                                th {{ background: #eee; }}
-                            </style>
-                        </head>
-                        <body>
-                            <h1>Leaderboard</h1>
-                            {html_table}
-                        </body>
-                        </html>
-                        """
+                    <html>
+                    <head>
+                        <title>Breathalyzer Leaderboard</title>
+                        <style>
+                            body {{ font-family: Arial, sans-serif; background: #f9f9f9; }}
+                            h1 {{ text-align: center; }}
+                            table {{ margin: auto; border-collapse: collapse; }}
+                            th, td {{ border: 1px solid #ccc; padding: 8px 12px; }}
+                            th {{ background: #eee; }}
+                        </style>
+                    </head>
+                    <body>
+                        <h1>Leaderboard</h1>
+                        {html_table}
+                    </body>
+                    </html>
+                    """
 
                     response = (
                         "HTTP/1.1 200 OK\r\n"
@@ -138,6 +188,38 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         "Connection: close\r\n"
                         "\r\n"
                         f"Error displaying leaderboard: {e}\r\n"
+                    )
+
+            elif method == "GET" and path == "/status":
+                try:
+                    og_df = load_csv()
+
+                    if og_df.empty:
+                        msg = "No entries yet."
+                    else:
+                        latest_ts = int(og_df["timestamp"].max())
+                        elapsed = int(time.time()) - latest_ts
+
+                        if elapsed <= 900:  # 15 minutes = 900 seconds
+                            msg = f"Last blow was {elapsed // 60} min ago → OK"
+                        else:
+                            msg = f"Last blow was {elapsed // 60} min ago → TOO LONG"
+
+                    response = (
+                        "HTTP/1.1 200 OK\r\n"
+                        "Content-Type: text/plain\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                        f"{msg}\r\n"
+                    )
+
+                except Exception as e:
+                    response = (
+                        "HTTP/1.1 500 Internal Server Error\r\n"
+                        "Content-Type: text/plain\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                        f"Error checking status: {e}\r\n"
                     )
 
             if response is None:
