@@ -2,6 +2,7 @@ import os
 import socket
 import pandas as pd
 import time
+import mimetypes
 
 HOST ='' # just 0.0.0.0 - all avail channels ie lan, eth, etc. as opposed to just picking one channel
 PORT = 8080 # dev port
@@ -29,6 +30,41 @@ def load_csv(path="../namesBac.csv"):
         return pd.read_csv(path)
     except pd.errors.EmptyDataError:
         return pd.DataFrame(columns=["name", "bac"])
+
+def serve_static_file(path):
+    """Serve static files from the static/ directory"""
+    # Remove leading slash and ensure it's in static directory
+    if path.startswith('/static/'):
+        file_path = path[1:]  # Remove leading slash
+    else:
+        file_path = f"static{path}"
+    
+    # Security check - prevent directory traversal
+    if '..' in file_path or not file_path.startswith('static/'):
+        return None
+    
+    if not os.path.exists(file_path):
+        return None
+    
+    try:
+        with open(file_path, 'rb') as f:
+            content = f.read()
+        
+        # Get MIME type
+        mime_type, _ = mimetypes.guess_type(file_path)
+        if not mime_type:
+            if file_path.endswith('.js'):
+                mime_type = 'application/javascript'
+            elif file_path.endswith('.css'):
+                mime_type = 'text/css'
+            elif file_path.endswith('.html'):
+                mime_type = 'text/html'
+            else:
+                mime_type = 'application/octet-stream'
+        
+        return content, mime_type
+    except Exception:
+        return None
 
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -102,7 +138,49 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         f"Error: {e}\r\n"
                     )
 
-            if method == "GET" and (path == "/leaderboard" or path == "/"):
+            if method == "GET" and path == "/":
+                # Serve the main index.html file
+                static_result = serve_static_file("/index.html")
+                if static_result:
+                    content, mime_type = static_result
+                    response = (
+                        "HTTP/1.1 200 OK\r\n"
+                        f"Content-Type: {mime_type}\r\n"
+                        f"Content-Length: {len(content)}\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                    ).encode() + content
+                else:
+                    response = (
+                        "HTTP/1.1 404 Not Found\r\n"
+                        "Content-Type: text/html\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                        "<html><body><h1>404 Not Found</h1></body></html>\r\n"
+                    )
+
+            elif method == "GET" and path.startswith("/static/"):
+                # Serve static files (CSS, JS, images, etc.)
+                static_result = serve_static_file(path)
+                if static_result:
+                    content, mime_type = static_result
+                    response = (
+                        "HTTP/1.1 200 OK\r\n"
+                        f"Content-Type: {mime_type}\r\n"
+                        f"Content-Length: {len(content)}\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                    ).encode() + content
+                else:
+                    response = (
+                        "HTTP/1.1 404 Not Found\r\n"
+                        "Content-Type: text/plain\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                        "File not found\r\n"
+                    )
+
+            elif method == "GET" and path == "/leaderboard":
                 try:
                     og_df = load_csv()
 
@@ -113,31 +191,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         index=False, float_format="%.3f"
                     )
 
-                    html_page = f"""
-                    <html>
-                    <head>
-                        <title>Breathalyzer Leaderboard</title>
-                        <style>
-                            body {{ font-family: Arial, sans-serif; background: #f9f9f9; }}
-                            h1 {{ text-align: center; }}
-                            table {{ margin: auto; border-collapse: collapse; }}
-                            th, td {{ border: 1px solid #ccc; padding: 8px 12px; }}
-                            th {{ background: #eee; }}
-                        </style>
-                    </head>
-                    <body>
-                        <h1>Leaderboard</h1>
-                        {html_table}
-                    </body>
-                    </html>
-                    """
-
                     response = (
                         "HTTP/1.1 200 OK\r\n"
                         "Content-Type: text/html\r\n"
                         "Connection: close\r\n"
                         "\r\n"
-                        f"{html_page}"
+                        f"{html_table}"
                     )
 
                 except Exception as e:
@@ -181,7 +240,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         f"Error checking status: {e}\r\n"
                     )
 
-            if response is None:
+            if 'response' not in locals() or response is None:
                 response = (
                     "HTTP/1.1 404 Not Found\r\n"
                     "Content-Type: text/html\r\n"
@@ -190,4 +249,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     "<html><body><h1>404 Not Found</h1></body></html>\r\n"
                 )
 
-            conn.sendall(response.encode()) # converts response to bytes and sends to client
+            # Send response - handle both string and bytes responses
+            if isinstance(response, str):
+                conn.sendall(response.encode())
+            else:
+                conn.sendall(response)
