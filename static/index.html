@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Breathalyzer Leaderboard</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <h1>Breathalyzer Leaderboard</h1>
+    
+    <!-- Ready Button -->
+    <div class="ready-section">
+        <button id="readyBtn" onclick="checkStatus()">Ready to blow?</button>
+        <div id="status"></div>
+    </div>
+
+    <!-- Name Form (hidden initially) -->
+    <div id="form" class="hidden">
+        <form id="nameForm">
+            <input type="text" name="name" placeholder="Enter your name" required />
+            <button type="submit">Submit Reading</button>
+        </form>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboard">
+        Loading...
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

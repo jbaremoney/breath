@@ -1,0 +1,140 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 2em;
+    background: #f9f9f9;
+    margin: 0;
+}
+
+h1 {
+    margin-bottom: 1em;
+    color: #333;
+}
+
+.ready-section {
+    margin: 2em 0;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    max-width: 500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#readyBtn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    font-size: 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin-bottom: 10px;
+}
+
+#readyBtn:hover {
+    background: #218838;
+}
+
+#readyBtn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+}
+
+#status {
+    font-weight: bold;
+    font-size: 1.1em;
+    padding: 10px;
+    border-radius: 5px;
+    min-height: 20px;
+}
+
+.status-ready {
+    color: #28a745;
+    background: #d4edda;
+}
+
+.status-wait {
+    color: #856404;
+    background: #fff3cd;
+}
+
+.status-error {
+    color: #721c24;
+    background: #f8d7da;
+}
+
+.hidden {
+    display: none;
+}
+
+#form {
+    margin-top: 1em;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+input, button {
+    padding: 8px 12px;
+    margin: 4px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+input[type="text"] {
+    width: 200px;
+}
+
+button[type="submit"] {
+    background: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+button[type="submit"]:hover {
+    background: #0056b3;
+}
+
+#leaderboard {
+    margin-top: 2em;
+}
+
+table {
+    margin: 0 auto;
+    border-collapse: collapse;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    max-width: 800px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 12px 16px;
+    text-align: left;
+}
+
+th {
+    background: #eee;
+    font-weight: bold;
+    color: #333;
+}
+
+tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+tr:hover {
+    background: #f0f0f0;
+}
