@@ -8,6 +8,10 @@ HOST ='' # just 0.0.0.0 - all avail channels ie lan, eth, etc. as opposed to jus
 PORT = 8080 # dev port
 LEADERBOARD = []
 
+# caching name to use when finish blowing
+PENDING_NAME = {}  # {"name": str, "timestamp": float}
+MOST_RECENT = {}
+
 
 def bin_search(lst, val):
     """Binary search for descending list; return insertion index."""
@@ -67,6 +71,11 @@ def serve_static_file(path):
         return None
 
 
+def generate_session_id():
+    """Generate a simple session ID"""
+    return str(int(time.time() * 1000))[-8:]  # Last 8 digits of timestamp
+
+
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT)) # says socket listens to specified channels, on given port
     s.listen(1) # starts listening for incoming conns, 1 is amount of unaccepted connections allowed in queue
@@ -92,6 +101,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
             if method == "POST" and path == "/submit":
                 # Example body: "name=Jack&score=0.09&timestamp=1736210521"
+                # this is just for testing
                 body = lines[-1]
                 print(f"POST body: {body}")
 
@@ -137,6 +147,118 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         "\r\n"
                         f"Error: {e}\r\n"
                     )
+
+            elif method == "POST" and path == "/cache-name":
+                # Cache user's name for breathalyzer workflow
+                body = lines[-1]
+                print(f"POST body: {body}")
+
+                try:
+                    params = dict(p.split("=") for p in body.split("&"))
+                    name = params.get("name", "").strip().replace(",", "")
+                    
+                    if not name:
+                        response = (
+                            "HTTP/1.1 400 Bad Request\r\n"
+                            "Content-Type: text/plain\r\n"
+                            "Connection: close\r\n"
+                            "\r\n"
+                            "Name is required\r\n"
+                        )
+                    else:
+                        # check if someone else is already pending
+                        if PENDING_NAME != {}:
+                            response = (
+                                "HTTP/1.1 201 BUSY\r\n"
+                                "Content-Type: text/plain\r\n"
+                                "Connection: close\r\n"
+                                "\r\n"
+                                f"Another user is already pending\r\n"
+                            )
+                        
+                        else:
+                            # Generate session ID and cache name
+                            PENDING_NAME = {
+                                "name": name,
+                                "timestamp": time.time()
+                            }
+
+                            response = (
+                                "HTTP/1.1 200 OK\r\n"
+                                "Content-Type: text/plain\r\n"
+                                "Connection: close\r\n"
+                                "\r\n"
+                                f"Success initializing session\r\n"
+                            )
+
+                except Exception as e:
+                    response = (
+                        "HTTP/1.1 400 Error\r\n"
+                        "Content-Type: text/plain\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                        f"Error: {e}\r\n"
+                    )
+
+            elif method == "POST" and path == "/submit-bac":
+                # Submit BAC reading and match with cached name
+                body = lines[-1]
+                print(f"POST body: {body}")
+
+                try:
+                    params = dict(p.split("=") for p in body.split("&"))
+                    bac = float(params.get("bac", "0"))
+                    timest = time.time()
+                    
+                    # Find cached name for this session
+                    write_data = {
+                        "name": PENDING_NAME.get("name"),
+                        "bac": bac,
+                        "timestamp": timest
+                    }
+
+                    # setting most recent
+                    MOST_RECENT = {
+                        "name": PENDING_NAME.get("name"),
+                        "bac": bac,
+                        "timestamp": timest
+                    }
+
+                    # clear from pending
+                    PENDING_NAME = {}
+                        
+                    # Save to CSV
+                    og_df = load_csv()
+
+                    # insert row at correct place
+                    bac_list = og_df["bac"].tolist() if "bac" in og_df else []
+                    insert_index = bin_search(bac_list, bac)
+                    MOST_RECENT["rank"] = insert_index
+
+                    new_row = write_data
+                    top = og_df.iloc[:insert_index]
+                    bottom = og_df.iloc[insert_index:]
+                    og_df = pd.concat([top, pd.DataFrame([new_row]), bottom]).reset_index(drop=True)
+
+                    og_df.to_csv("../namesBac.csv", index=False)
+
+                    response = (
+                        "HTTP/1.1 200 OK\r\n"
+                        "Content-Type: text/plain\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                        f"Success: {name} - {bac:.3f}\r\n"
+                    )
+
+                except Exception as e:
+                    response = (
+                        "HTTP/1.1 400 Error\r\n"
+                        "Content-Type: text/plain\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                        f"Error: {e}\r\n"
+                    )
+
 
             if method == "GET" and path == "/":
                 # Serve the main index.html file
@@ -208,6 +330,34 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         f"Error displaying leaderboard: {e}\r\n"
                     )
 
+            elif method == "GET" and path == "/recent":
+                # Get most recent reading
+                try:
+                    if MOST_RECENT:
+                        response = (
+                            "HTTP/1.1 200 OK\r\n"
+                            "Content-Type: application/json\r\n"
+                            "Connection: close\r\n"
+                            "\r\n"
+                            f'{{"name": "{MOST_RECENT.get("name", "")}", "bac": {MOST_RECENT.get("bac", 0)}, "timestamp": {MOST_RECENT.get("timestamp", 0)}, "rank": {MOST_RECENT.get("rank", 0)}}}\r\n'
+                        )
+                    else:
+                        response = (
+                            "HTTP/1.1 200 OK\r\n"
+                            "Content-Type: application/json\r\n"
+                            "Connection: close\r\n"
+                            "\r\n"
+                            '{"name": "", "bac": 0, "timestamp": 0, "rank": 0}\r\n'
+                        )
+                except Exception as e:
+                    response = (
+                        "HTTP/1.1 500 Internal Server Error\r\n"
+                        "Content-Type: text/plain\r\n"
+                        "Connection: close\r\n"
+                        "\r\n"
+                        f"Error: {e}\r\n"
+                    )
+
             elif method == "GET" and path == "/status":
                 try:
                     og_df = load_csv()
@@ -215,13 +365,15 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     if og_df.empty:
                         msg = "No entries yet."
                     else:
-                        latest_ts = int(og_df["timestamp"].max())
+                        latest_ts = MOST_RECENT.get("timestamp") if MOST_RECENT.get("timestamp") else (og_df["timestamp"].max())
                         elapsed = int(time.time()) - latest_ts
 
                         if elapsed <= 900:  # 15 minutes = 900 seconds
                             msg = f"Last blow was {elapsed // 60} min ago → OK"
                         else:
                             msg = f"Last blow was {elapsed // 60} min ago → TOO LONG"
+                    if PENDING_NAME != {}:
+                        msg = "BUSY. Someone is already in the process"
 
                     response = (
                         "HTTP/1.1 200 OK\r\n"

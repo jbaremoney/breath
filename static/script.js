@@ -1,6 +1,13 @@
-// Load leaderboard on page load
+// Load data on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadLeaderboard();
+    loadRecentReading();
+    
+    // Refresh data every 3 seconds
+    setInterval(() => {
+        loadLeaderboard();
+        loadRecentReading();
+    }, 3000);
 });
 
 async function checkStatus() {
@@ -76,6 +83,30 @@ async function loadLeaderboard() {
     }
 }
 
+async function loadRecentReading() {
+    const bannerEl = document.getElementById('recentBanner');
+    const nameEl = document.getElementById('recentName');
+    const bacEl = document.getElementById('recentBAC');
+    const rankEl = document.getElementById('recentRank');
+    
+    try {
+        const res = await fetch('/recent');
+        const data = await res.json();
+        
+        if (data.name && data.bac > 0) {
+            nameEl.textContent = data.name;
+            bacEl.textContent = `${data.bac.toFixed(3)}%`;
+            rankEl.textContent = `#${data.rank + 1}`;
+            bannerEl.classList.remove('hidden');
+        } else {
+            bannerEl.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error('Error loading recent reading:', error);
+        bannerEl.classList.add('hidden');
+    }
+}
+
 // Handle form submission
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('nameForm');
@@ -91,21 +122,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Submit the form
-            fetch('/submit', {
+            // Submit name to cache
+            fetch('/cache-name', {
                 method: 'POST',
                 body: formData
             })
             .then(response => {
                 if (response.ok) {
-                    alert('Reading submitted successfully!');
-                    loadLeaderboard(); // Refresh leaderboard
-                    form.reset();
+                    // Hide form and show success message
                     document.getElementById('form').classList.add('hidden');
-                    document.getElementById('status').textContent = '';
-                    document.getElementById('status').className = '';
+                    document.getElementById('status').textContent = '✅ Name cached! Please blow into the breathalyzer now.';
+                    document.getElementById('status').className = 'status-ready';
+                    
+                    // Reset after 5 seconds
+                    setTimeout(() => {
+                        document.getElementById('status').textContent = '';
+                        document.getElementById('status').className = '';
+                    }, 5000);
                 } else {
-                    alert('Error submitting reading');
+                    alert('Error caching name');
                 }
             })
             .catch(error => {

@@ -9,6 +9,16 @@
 <body>
     <h1>Breathalyzer Leaderboard</h1>
     
+    <!-- Most Recent Reading Banner -->
+    <div id="recentBanner" class="recent-banner hidden">
+        <div class="recent-content">
+            <span class="recent-label">Most Recent:</span>
+            <span class="recent-name" id="recentName"></span>
+            <span class="recent-bac" id="recentBAC"></span>
+            <span class="recent-rank" id="recentRank"></span>
+        </div>
+    </div>
+    
     <!-- Ready Button -->
     <div class="ready-section">
         <button id="readyBtn" onclick="checkStatus()">Ready to blow?</button>
@@ -19,7 +29,7 @@
     <div id="form" class="hidden">
         <form id="nameForm">
             <input type="text" name="name" placeholder="Enter your name" required />
-            <button type="submit">Submit Reading</button>
+            <button type="submit">Ready to Blow</button>
         </form>
     </div>
 
