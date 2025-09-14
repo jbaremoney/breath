@@ -25,11 +25,11 @@ async function checkStatus() {
         const res = await fetch('/status');
         const text = await res.text();
         
-        if (text.includes('OK')) {
+        if (text.includes('READY')) {
             statusEl.textContent = "✅ Ready! Please enter your name.";
             statusEl.className = 'status-ready';
             formEl.classList.remove('hidden');
-        } else if (text.includes('min ago')) {
+        } else if (text.includes('WAIT')) {
             // Extract wait time from status message
             const match = text.match(/(\d+) min ago/);
             if (match) {

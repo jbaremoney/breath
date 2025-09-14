@@ -150,6 +150,8 @@ def cache_name():
 
         return "Success initializing session", 200
 
+
+
     except Exception as e:
         return f"Error: {e}", 400
 
@@ -257,9 +259,11 @@ def status():
             elapsed = int(time.time()) - latest_ts
 
             if elapsed <= 900:  # 15 minutes = 900 seconds
-                msg = f"Last blow was {elapsed // 60} min ago → OK"
+                msg = f"Last blow was {elapsed // 60} min ago → WAIT"
+                print(msg)
             else:
-                msg = f"Last blow was {elapsed // 60} min ago → TOO LONG"
+                msg = f"Last blow was {elapsed // 60} min ago → READY"
+                print(msg)
 
         if PENDING_NAME != {}:
             msg = "BUSY. Someone is already in the process"
