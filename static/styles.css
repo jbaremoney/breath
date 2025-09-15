@@ -1,233 +1,468 @@
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    padding: 2em;
-    background: #f9f9f9;
-    margin: 0;
+/* ========= THEME (light/dark aware) ========= */
+:root{
+  --bg:#f7f9fc;
+  --panel:#ffffff;
+  --text:#0f172a;
+  --muted:#5a6b86;
+  --ring:#cfe0ff;
+  --shadow:0 6px 20px rgba(16,24,40,.08);
+
+  --primary:#2d67ff;
+  --primary-600:#2052d6;
+
+  --success:#22a06b;
+  --success-bg:#e7f7ef;
+
+  --warn:#946200;
+  --warn-bg:#fff5d6;
+
+  --error:#b42318;
+  --error-bg:#ffe5e0;
+
+  --radius:12px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0b0f19;
+    --panel:#0f1422;
+    --text:#e7ecf8;
+    --muted:#a2afc7;
+    --ring:#31426b;
+    --shadow:0 8px 30px rgba(0,0,0,.38);
+
+    --primary:#6ea8fe;
+    --primary-600:#5a92ea;
+
+    --success:#59d38a;   --success-bg:#11271c;
+    --warn:#ffd166;      --warn-bg:#2a2314;
+    --error:#ff6b6b;     --error-bg:#2a1614;
+  }
 }
 
-h1 {
-    margin-bottom: 1em;
-    color: #333;
+/* ========= BASE ========= */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: "Inter", sans-serif;
+  -webkit-font-smoothing:antialiased;
+  color:var(--text);
+  background:var(--bg);
+  text-align:center;
+  padding:2rem clamp(1rem,3vw,2rem);
+
+}
+h1{
+  margin:0 0 1rem;
+  color:var(--text);
+  letter-spacing:.2px;
 }
 
-.recent-banner {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 15px 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    animation: slideIn 0.5s ease-out;
+/* ========= RECENT BANNER ========= */
+.recent-banner{
+  background:linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+  color:#fff;
+  padding:14px 18px;
+  border-radius:var(--radius);
+  margin:0 auto 18px;
+  box-shadow:var(--shadow);
+  max-width:80%;
+  animation:slideIn .5s ease-out;
 }
+.recent-content{
+  display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;
+}
+.recent-label{font-weight:800;font-size:.9rem;letter-spacing:.06em;opacity:.95;text-transform:uppercase}
+.recent-name{font-size:1.1rem;font-weight:800}
+.recent-bac,.recent-rank{
+  background:rgba(255,255,255,.18);
+  padding:6px 10px;border-radius:999px;font-weight:800;font-variant-numeric:tabular-nums
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
 
-.recent-content {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
+/* ========= CARDS/SECTIONS ========= */
+.ready-section,
+#form,
+#waiting{
+  margin:1.25rem auto 0;
+  padding:20px;
+  background:var(--panel); 
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  border:1px solid var(--ring);
+  max-width:560px;
+  text-align:left;
 }
+#waiting{text-align:left}
+.waiting-message{text-align:center}
+.waiting-message h3{color:var(--primary);margin:0 0 .5rem}
+.waiting-message p{color:var(--muted);margin:.25rem 0 1rem}
 
-.recent-label {
-    font-weight: bold;
-    font-size: 16px;
+/* ========= BUTTONS / INPUTS ========= */
+button,
+input{
+  font:inherit;
 }
+button{
+  padding:10px 16px;border-radius:10px;border:1px solid transparent;
+  cursor:pointer;transition:filter .2s, transform .04s;
+  box-shadow:0 2px 8px rgba(0,0,0,.08);
+}
+button:active{transform:translateY(1px)}
 
-.recent-name {
-    font-size: 18px;
-    font-weight: bold;
+#readyBtn{
+  background:var(--success);color:#fff;border:none;margin:0 0 .6rem;
 }
-
-.recent-bac {
-    background: rgba(255,255,255,0.2);
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-weight: bold;
-}
-
-.recent-rank {
-    background: rgba(255,255,255,0.2);
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-weight: bold;
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.ready-section {
-    margin: 2em 0;
-    padding: 20px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
-}
+#readyBtn:hover{filter:brightness(1.05)}
+#readyBtn:disabled{background:#9aa4b2;cursor:not-allowed;filter:none}
 
 #readyBtn {
-    background: #28a745;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    font-size: 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.3s;
-    margin-bottom: 10px;
+  display: block;           /* let it center with auto margin */
+  margin: 1rem auto;        /* center horizontally with spacing */
+  padding: 16px 32px;       /* more padding = bigger button */
+  font-size: 1.25rem;       /* larger text */
+  font-weight: 700;         /* bolder text */
+  border-radius: 10px;      /* a little more rounded */
 }
 
-#readyBtn:hover {
-    background: #218838;
+button[type="submit"]{
+  background:var(--primary);color:#fff;border:none;
+}
+button[type="submit"]:hover{background:var(--primary-600)}
+
+input[type="text"]{
+  width:100%;
+  max-width:280px;
+  display:block;margin:8px auto 10px;
+  padding:10px 12px;border-radius:10px;
+  border:1px solid var(--ring);
+  background:color-mix(in oklab, var(--panel) 95%, transparent);
+  color:var(--text);
+}
+input[type="text"]::placeholder{color:color-mix(in oklab, var(--muted) 70%, transparent)}
+:focus-visible{
+  outline:2px solid transparent;
+  box-shadow:0 0 0 3px color-mix(in oklab, var(--primary) 35%, var(--ring));
+  border-radius:10px;
 }
 
-#readyBtn:disabled {
-    background: #6c757d;
-    cursor: not-allowed;
+/* ========= STATUS CHIP ========= */
+#status{
+  font-weight:700;font-size:1rem;
+  padding:10px 12px;border-radius:10px;min-height:22px;
+  /* border:1px solid var(--ring); */
+  text-align:center;margin-top:.3rem;
+}
+.status-ready{color:var(--success);background:var(--success-bg);border-color:color-mix(in oklab, var(--success) 40%, var(--ring))}
+.status-wait{color:var(--warn);background:var(--warn-bg);border-color:color-mix(in oklab, var(--warn) 30%, var(--ring))}
+.status-error{color:var(--error);background:var(--error-bg);border-color:color-mix(in oklab, var(--error) 40%, var(--ring))}
+
+.hidden{display:none}
+
+/* ========= TABLE / LEADERBOARD ========= */
+#leaderboard{
+  margin:2rem auto 0;
+  max-width:1000px;
+  overflow-x:auto; /* mobile scroll */
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:6px; /* breathing room for shadow */
+}
+table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width:560px;
+  background:var(--panel);
+  border:1px solid var(--ring);
+  border-radius:var(--radius);
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+thead th{
+  position:sticky;top:0;z-index:1;
+  background:color-mix(in oklab, var(--panel) 92%, var(--primary) 8%);
+  color:var(--text);
+}
+th,td{
+  padding:12px 16px;
+  border-bottom:1px solid color-mix(in oklab, var(--ring) 70%, transparent);
+  text-align:left;
+}
+th{font-weight:800}
+tbody tr:nth-child(odd){background:color-mix(in oklab, var(--panel) 92%, var(--bg) 8%)}
+tbody tr:hover{background:color-mix(in oklab, var(--primary) 12%, transparent)}
+
+/* ========= INFO BOX ========= */
+.session-info{
+  background:color-mix(in oklab, var(--panel) 90%, var(--bg) 10%);
+  padding:10px;border-radius:8px;border:1px solid var(--ring);
+}
+.session-info small{color:var(--muted);font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+
+/* ========= REDUCE MOTION ========= */
+@media (prefers-reduced-motion: reduce){
+  *{animation:none !important;transition:none !important}
 }
 
-#status {
-    font-weight: bold;
-    font-size: 1.1em;
-    padding: 10px;
-    border-radius: 5px;
-    min-height: 20px;
+body {
+  /* background: #e6f2ff;      light blue */
+  /* or try a gradient for fun */
+  background: linear-gradient(135deg, #665bb9, #ffffff); 
 }
 
-.status-ready {
-    color: #28a745;
-    background: #d4edda;
-}
+/* ============== POLISH / COHESION OVERRIDES ============== */
 
-.status-wait {
-    color: #856404;
-    background: #fff3cd;
-}
+/* One column width for all major blocks */
+:root { --wrap: 880px; }
 
-.status-error {
-    color: #721c24;
-    background: #f8d7da;
-}
-
-.hidden {
-    display: none;
-}
-
-#form {
-    margin-top: 1em;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-input, button {
-    padding: 8px 12px;
-    margin: 4px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-}
-
-input[type="text"] {
-    width: 200px;
-    display: block;
-    margin: 8px auto;
-}
-
-button[type="submit"] {
-    background: #007bff;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: background 0.3s;
-}
-
-button[type="submit"]:hover {
-    background: #0056b3;
-}
-
+h1,
+.recent-banner,
+.ready-section,
+#form,
 #leaderboard {
-    margin-top: 2em;
+  max-width: var(--wrap);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Consistent vertical rhythm */
+h1 { margin: 0 auto 1.25rem; font-weight: 800; letter-spacing: .2px; }
+.recent-banner { margin-bottom: 1.25rem; }
+.ready-section { margin-top: 1.25rem; }
+#form { margin-top: 1rem; }
+#leaderboard { margin-top: 1.5rem; }
+
+/* Softer, consistent card look */
+:root {
+  --shadow-sm: 0 2px 10px rgba(16,24,40,.08);
+}
+.ready-section,
+#form {
+  border: 1px solid color-mix(in oklab, var(--ring) 65%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Button: centered, large, but not oversized on mobile */
+#readyBtn {
+  display: block;
+  margin: 1rem auto .75rem;
+  padding: 14px clamp(20px, 5vw, 28px);
+  font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+  font-weight: 800;
+  border-radius: 12px;
+}
+
+/* Table: unify with cards (so it matches the ready/form sections) */
+#leaderboard {
+  padding-bottom: 10px; /* breathing room for table shadow */
 }
 
 table {
-    margin: 0 auto;
-    border-collapse: collapse;
-    background: white;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    border-radius: 8px;
-    overflow: hidden;
-    max-width: 800px;
+  background: var(--panel);
+  border: 1px solid color-mix(in oklab, var(--ring) 65%, transparent);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
 }
 
+/* Softer row separators and hover */
 th, td {
-    border: 1px solid #ddd;
-    padding: 12px 16px;
-    text-align: left;
+  border-bottom: 1px solid color-mix(in oklab, var(--ring) 55%, transparent);
+}
+tbody tr:nth-child(odd) {
+  background: color-mix(in oklab, var(--panel) 96%, var(--bg) 4%);
+}
+tbody tr:hover {
+  background: color-mix(in oklab, var(--primary) 10%, transparent);
 }
 
-th {
-    background: #eee;
-    font-weight: bold;
-    color: #333;
+/* Sticky header with a touch of backdrop to avoid “cut” look on scroll */
+thead th {
+  background: color-mix(in oklab, var(--panel) 92%, var(--primary) 8%);
+  backdrop-filter: saturate(110%) blur(6px);
+  border-bottom: 1px solid color-mix(in oklab, var(--ring) 70%, transparent);
 }
 
-tr:nth-child(even) {
-    background: #f9f9f9;
+/* Inputs and submit button: match the main button + card theme */
+input[type="text"] {
+  border-radius: 12px;
+  border: 1px solid color-mix(in oklab, var(--ring) 65%, transparent);
+}
+button[type="submit"] {
+  border-radius: 12px;
+  font-weight: 700;
+  padding: 10px 18px;
 }
 
-tr:hover {
-    background: #f0f0f0;
+/* Background: smoother gradient so edges don’t feel harsh */
+body {
+  background:
+    radial-gradient(1100px 700px at 15% -10%, rgba(45,103,255,.08), transparent),
+    radial-gradient(1100px 700px at 85% -10%, rgba(118,75,162,.10), transparent),
+    var(--bg);
 }
 
-#waiting {
-    margin-top: 1em;
-    background: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    max-width: 500px;
-    margin-left: auto;
-    margin-right: auto;
+/* Small motion polish without layout jumps */
+.recent-banner,
+.ready-section,
+#form,
+#leaderboard table {
+  transition: box-shadow .25s ease, transform .04s ease;
+}
+#leaderboard table:hover,
+.ready-section:hover,
+#form:hover {
+  box-shadow: 0 10px 30px rgba(16,24,40,.12);
 }
 
-.waiting-message {
-    text-align: center;
+
+/* ===== Kahoot-style podium ===== */
+.podium{
+  display:grid;
+  grid-template-columns: 1fr 1.2fr 1fr; /* #2, #1, #3 */
+  gap: 16px;
+  max-width: var(--wrap, 880px);
+  margin: 1rem auto 0;
+  align-items: end;
+  margin-top: 1.5rem;   /* more space from the section above */
+  padding-top: 28px;    /* internal headroom so medals don't hit the top */
+}
+.podium-item{
+  background: var(--panel);
+  border: 1px solid color-mix(in oklab, var(--ring) 65%, transparent);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 18px 16px 14px;
+  text-align: center;
+  position: relative;
+  overflow: visible;    /* let the medal bubble show outside the card */
+}
+.podium-item.place-1{ transform: translateY(-10px); }
+.podium-item.place-2{ transform: translateY(-2px); }
+.podium-item.place-3{ transform: translateY(2px); }
+
+.podium-item .medal{
+  width: 44px; height: 44px; line-height: 44px;
+  border-radius: 999px; margin: -34px auto 8px;
+  font-weight: 900; color: #fff;
+  background: linear-gradient(135deg, #ffd166, #f4b400); /* gold-ish */
+  box-shadow: 0 6px 16px rgba(0,0,0,.2);
+}
+.podium-item.place-2 .medal{ background: linear-gradient(135deg, #cfd8ff, #9ba7ff); } /* silver */
+.podium-item.place-3 .medal{ background: linear-gradient(135deg, #ffccb3, #ff9a74); } /* bronze */
+
+.podium-name{
+  font-weight: 800;
+  font-size: 1.05rem;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+.podium-bac{
+  margin-top: 6px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--primary) 14%, transparent);
+  display: inline-block;
 }
 
-.waiting-message h3 {
-    color: #007bff;
-    margin-bottom: 10px;
+/* ===== Lower mini-table (ranks 4–6) ===== */
+.lower-board{
+  max-width: var(--wrap, 880px);
+  margin: 16px auto 0;
+}
+.lower-table{
+  width:100%;
+  border-collapse:separate; border-spacing:0;
+  background: var(--panel);
+  border: 1px solid color-mix(in oklab, var(--ring) 65%, transparent);
+  border-radius: 12px; overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.lower-table th, .lower-table td{
+  padding: 10px 14px;
+  border-bottom: 1px solid color-mix(in oklab, var(--ring) 55%, transparent);
+  text-align: left;
+}
+.lower-table thead th{
+  background: color-mix(in oklab, var(--panel) 92%, var(--primary) 8%);
+  position: sticky; top: 0; z-index: 1;
+}
+.lower-table tbody tr:nth-child(odd){
+  background: color-mix(in oklab, var(--panel) 96%, var(--bg) 4%);
+}
+.lower-table tbody tr:hover{
+  background: color-mix(in oklab, var(--primary) 10%, transparent);
 }
 
-.waiting-message p {
-    color: #666;
-    margin-bottom: 20px;
+/* Responsive: stack podium on small screens */
+@media (max-width: 720px){
+  .podium{
+    grid-template-columns: 1fr;
+  }
+  .podium-item{ transform:none !important; }
+  .podium-item .medal{ margin-top: -28px; }
 }
 
-.session-info {
-    background: #f8f9fa;
-    padding: 10px;
-    border-radius: 4px;
-    border: 1px solid #dee2e6;
+#form button[type="submit"] {
+  display: block;          /* make it block-level */
+  width: fit-content;      /* shrink to content (fallback is fine) */
+  margin: 0.5rem auto 0;   /* auto left/right centers it */
 }
 
-.session-info small {
-    color: #6c757d;
-    font-family: monospace;
+
+/* ensure the underlay matches your page background */
+html {
+  background: var(--bg);              /* matches your theme */
+  /* if you’re using a gradient on body, also add a solid fallback here */
+  background-color: var(--bg);
+}
+
+/* if you use a gradient on body, keep it — just make sure html has a color */
+body {
+  min-height: 100%;
+  /* your existing gradient is fine */
+  /* background: radial-gradients..., var(--bg); */
+    padding-bottom: 80px;
+
+}
+
+body::after{
+  content:"";
+  display:block;
+  height: 120px;           /* tweak to taste */
+}
+
+/* Collapsible container animation */
+.collapsible{
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: max-height .35s ease, opacity .25s ease, transform .25s ease;
+}
+
+/* Open state (set a safe upper bound for content height) */
+.collapsible.open{
+  max-height: 400px;  /* adjust if your form gets taller */
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Ready button gets a chevron that flips when open */
+#readyBtn{
+  position: relative;
+  padding-right: 42px;               /* space for chevron */
+}
+#readyBtn::after{
+  content: "▾";
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%) rotate(0deg);
+  transition: transform .2s ease;
+  opacity: .9;
+}
+#readyBtn[aria-expanded="true"]::after{
+  transform: translateY(-50%) rotate(180deg);
 }

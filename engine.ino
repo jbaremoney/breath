@@ -64,7 +64,7 @@ void loop() {
     }
     
     int sensorValue = analogRead(A0);  // Raw reading (0–4095)
-    float voltage = sensorValue * (3.3 / 4095.0);  // Convert to volts
+    float voltage = sensorValue * (5.0 / 4095.0);  // Convert to volts
 
     // Create a message string with both values
     char msg[64];
