@@ -9,6 +9,7 @@ app = Flask(__name__)
 # Global variables (consider using a database or session storage for production)
 PENDING_NAME = {}
 MOST_RECENT = {}
+READY = False
 
 # Helper functions (you'll need to include these from your original code)
 def load_csv():
@@ -95,7 +96,7 @@ def serve_static(filename):
 @app.route('/cache-name', methods=['POST'])
 def cache_name():
     """Cache user's name for breathalyzer workflow, ready the module"""
-    global PENDING_NAME
+    global PENDING_NAME, READY
 
     try:
         name = request.form.get('name', '').strip().replace(',', '')
@@ -113,6 +114,8 @@ def cache_name():
             "timestamp": time.time()
         }
 
+        READY = True
+
         return "Success initializing session", 200
 
 
@@ -124,7 +127,7 @@ def cache_name():
 @app.route('/submit-bac', methods=['POST'])
 def submit_bac():
     """Submit BAC reading and match with cached name"""
-    global PENDING_NAME, MOST_RECENT
+    global PENDING_NAME, MOST_RECENT, READY
 
     try:
         bac = float(request.form.get('bac', '0'))
@@ -163,6 +166,7 @@ def submit_bac():
         og_df = pd.concat([top, pd.DataFrame([new_row]), bottom]).reset_index(drop=True)
 
         og_df.to_csv("../namesBac.csv", index=False)
+        READY = False
 
         return f"Success: {cached_name} - {bac:.3f}", 200
 
@@ -209,6 +213,18 @@ def recent():
             })
     except Exception as e:
         return f"Error: {e}", 500
+
+@app.route('/blow-status')
+def blow_status():
+    """called by sparkfun to see if it's time to blow"""
+    if READY:
+        response = "READY"
+
+    else:
+        response = "WAIT"
+
+    return response
+
 
 
 @app.route('/status')
