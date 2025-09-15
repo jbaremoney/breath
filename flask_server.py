@@ -69,7 +69,7 @@ def serve_static_file(path):
     except Exception:
         return None
 
-# Routes
+
 @app.route('/')
 def index():
     """Serve the main index.html file"""
@@ -92,44 +92,9 @@ def serve_static(filename):
         return "File not found", 404
 
 
-@app.route('/submit', methods=['POST'])
-def submit():
-    """Handle form submissions with name, BAC, and timestamp"""
-    try:
-        # Get form data
-        name = request.form.get('name', '').strip().replace(',', '')
-        bac = float(request.form.get('score', '0'))
-
-        # Use provided timestamp if valid, else current unix time
-        ts = request.form.get('timestamp')
-        if ts and ts.isdigit():
-            timestamp = int(ts)
-        else:
-            timestamp = int(time.time())
-
-        # Load leaderboard
-        og_df = load_csv()
-
-        # Insert row at correct place
-        bac_list = og_df["bac"].tolist() if "bac" in og_df else []
-        insert_index = bin_search(bac_list, bac)
-
-        new_row = {"name": name, "bac": bac, "timestamp": timestamp}
-        top = og_df.iloc[:insert_index]
-        bottom = og_df.iloc[insert_index:]
-        og_df = pd.concat([top, pd.DataFrame([new_row]), bottom]).reset_index(drop=True)
-
-        og_df.to_csv("../namesBac.csv", index=False)
-
-        return "Success", 200
-
-    except Exception as e:
-        return f"Error: {e}", 400
-
-
 @app.route('/cache-name', methods=['POST'])
 def cache_name():
-    """Cache user's name for breathalyzer workflow"""
+    """Cache user's name for breathalyzer workflow, ready the module"""
     global PENDING_NAME
 
     try:
