@@ -129,6 +129,8 @@ def submit_bac():
     """Submit BAC reading and match with cached name"""
     global PENDING_NAME, MOST_RECENT, READY
 
+    print("BAC submit called")
+
     try:
         bac = float(request.form.get('bac', '0'))
         timest = time.time()
@@ -171,6 +173,7 @@ def submit_bac():
         return f"Success: {cached_name} - {bac:.3f}", 200
 
     except Exception as e:
+        print("ERROR submitting BAC")
         return f"Error: {e}", 400
 
 
