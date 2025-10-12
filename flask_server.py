@@ -11,6 +11,22 @@ PENDING_NAME = {}
 MOST_RECENT = {}
 READY = False
 
+# Base directories
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))      # /app/breath or your current dir
+STATIC_DIR = os.path.join(BASE_DIR, "static")              # /app/breath/static
+CSV_PATH = os.path.join(BASE_DIR, "namesBac.csv")          # if CSV is here, or adjust if higher up
+
+@app.route("/")
+def index():
+    index_file = os.path.join(STATIC_DIR, "index.html")
+    if os.path.exists(index_file):
+        return send_from_directory(STATIC_DIR, "index.html")
+    return "Flask is up — but no index.html found in static/"
+
+@app.route("/static/<path:filename>")
+def serve_static(filename):
+    return send_from_directory(STATIC_DIR, filename)
+
 # Helper functions (you'll need to include these from your original code)
 def load_csv():
     """Load the CSV file, create if doesn't exist"""
@@ -69,29 +85,6 @@ def serve_static_file(path):
         return content, mime_type
     except Exception:
         return None
-
-
-@app.route('/')
-def index():
-    """Serve the main index.html file"""
-    static_result = serve_static_file("/index.html")
-    if static_result:
-        content, mime_type = static_result
-        return content, 200, {'Content-Type': mime_type}
-    else:
-        return "<html><body><h1>404 Not Found</h1></body></html>", 404
-
-
-@app.route('/static/<path:filename>')
-def serve_static(filename):
-    """Serve static files"""
-    static_result = serve_static_file(f"/static/{filename}")
-    if static_result:
-        content, mime_type = static_result
-        return content, 200, {'Content-Type': mime_type}
-    else:
-        return "File not found", 404
-
 
 @app.route('/cache-name', methods=['POST'])
 def cache_name():
