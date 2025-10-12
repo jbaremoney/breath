@@ -19,6 +19,41 @@ document.addEventListener('DOMContentLoaded', () => {
   const readyBtn = document.getElementById('readyBtn');
   const formWrap = document.getElementById('form');
   const statusEl = document.getElementById('status');
+  const nameForm = document.getElementById('nameForm');
+  nameForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const input = nameForm.querySelector('input[name="name"]');
+    const name = input?.value?.trim();
+    if (!name) return;
+
+    // Optional UX: disable while submitting
+    const submitBtn = nameForm.querySelector('button[type="submit"]');
+    submitBtn && (submitBtn.disabled = true);
+
+    try {
+      const res = await fetch('/initialize-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+      });
+
+      if (res.ok) {
+        // Success: show a small confirmation in the status area
+        statusEl.className = 'status-ready';
+        statusEl.textContent = '✅ You’re queued—device will prompt when ready.';
+        // You can also keep the form open so next user can type their name
+      } else {
+        const msg = (await res.text()).trim();
+        statusEl.className = 'status-error';
+        statusEl.textContent = `❌ ${msg || 'Unable to initialize session'}`;
+      }
+    } catch (err) {
+      statusEl.className = 'status-error';
+      statusEl.textContent = '❌ Network error initializing session';
+    } finally {
+      submitBtn && (submitBtn.disabled = false);
+    }
+  });
 
   // If the form still has "hidden" from old code, convert it to collapsible/closed
   if (formWrap && formWrap.classList.contains('hidden')) {
@@ -88,7 +123,7 @@ async function checkStatus(statusEl, formWrap, readyBtn) {
       return;
     }
 
-    const res = await fetch('/status', { cache: 'no-store' });
+    const res = await fetch('/can-cache', { cache: 'no-store' });
     const text = (await res.text()).trim();
 
     if (text.includes('READY')) {
@@ -98,8 +133,9 @@ async function checkStatus(statusEl, formWrap, readyBtn) {
       setFormOpen(formWrap, readyBtn, true);
       document.querySelector('#nameForm input[name="name"]')?.focus();
     } else {
-      const m = text.match(/(\d+)\s*min\s*ago/i);
-      const remaining = m ? Math.max(0, 15 - parseInt(m[1], 10)) : null;
+      // New server returns: "WAIT {mins} MINUTES"
+      const m = text.match(/WAIT\s+(\d+)\s+MINUTES/i);
+      const remaining = m ? parseInt(m[1], 10) : null;
 
       lastStatus = 'WAIT';
       statusEl.className = 'status-wait';
@@ -224,7 +260,7 @@ async function loadRecentReading() {
       // Use top of mock data if present
       data = { name: 'Avery', bac: 0.089, rank: 0, voltage: 1.14 };
     } else {
-      const res = await fetch('/recent', { cache: 'no-store' });
+      const res = await fetch('/get-most-recent', { cache: 'no-store' });
       data = await res.json();
     }
 
@@ -249,7 +285,7 @@ async function loadRecentReading() {
     if (data.name && metricText) {
       nameEl.textContent = data.name;
       bacEl.textContent = metricText;
-      rankEl.textContent = (data.rank != null) ? `#${Number(data.rank) + 1}` : '';
+      rankEl.textContent = (data.rank != null) ? `#${Number(data.rank)}` : '';
       bannerEl.classList.remove('hidden');
     } else {
       bannerEl.classList.add('hidden');
