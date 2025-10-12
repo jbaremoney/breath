@@ -264,23 +264,18 @@ async function loadRecentReading() {
       data = await res.json();
     }
 
-    // Accept number or numeric string; support several keys
-    const vRaw =
-      data.voltage ?? data.volts ?? data.v ??
-      (typeof data.mv === 'number' ? data.mv / 1000 : data.mv);
-
-    const vParsed = (vRaw != null)
-      ? parseFloat(String(vRaw).replace(/[^\d.+-eE]/g, ''))
-      : NaN;
-
-    let metricText = '';
-    if (!Number.isNaN(vParsed)) {
-      metricText = `${vParsed.toFixed(2)} V`;
-    } else if (typeof data.bac === 'number') {
-      metricText = `${data.bac.toFixed(3)}%`;
-    } else if (data.value != null) {
-      metricText = String(data.value);
-    }
+     let metricText = '';
+      if (typeof data.bac === 'number' && !Number.isNaN(data.bac)) {
+        metricText = `${data.bac.toFixed(3)}%`;
+      } else if (data.bac != null) {
+        // Handle numeric string like "0.089" or "0.089%"
+        const bacNum = parseFloat(String(data.bac).replace(/[^\d.+-eE]/g, ''));
+        metricText = Number.isNaN(bacNum) ? String(data.bac) : `${bacNum.toFixed(3)}%`;
+      } else if (data.value != null) {
+        metricText = String(data.value);
+      } else {
+        metricText = '—';
+      }
 
     if (data.name && metricText) {
       nameEl.textContent = data.name;

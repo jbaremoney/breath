@@ -67,8 +67,9 @@ def should_start_blow():
     This gets polled by the breathalyzer to see if it should start blow process
     """
     with session_lock:
-        if ACTIVE_SESSION and ACTIVE_SESSION.name:
+        if ACTIVE_SESSION and ACTIVE_SESSION.name and getattr(ACTIVE_SESSION, "name", None) and getattr(ACTIVE_SESSION, "bac", None) is None:
             return "TRUE"
+        
 
     return "FALSE"
 
@@ -163,6 +164,33 @@ def leaderboard():
 
     except Exception as e:
         return f"Error displaying leaderboard: {e}", 500
+    
+@app.route('/leaderboard.json')
+def leaderboard_json():
+    # Query params: /leaderboard.json?offset=0&limit=25
+    try:
+        offset = int(request.args.get('offset', 0))
+        limit  = min(max(int(request.args.get('limit', 25)), 1), 200)  # cap to 200 per page
+    except ValueError:
+        return jsonify({"error":"bad offset/limit"}), 400
+
+    df = load_csv()  # your helper that reads namesBac.csv
+    # Ensure sorted descending on BAC
+    if 'bac' in df.columns:
+        df = df.sort_values('bac', ascending=False, kind='stable').reset_index(drop=True)
+
+    total = len(df)
+    slice_df = df.iloc[offset:offset+limit]
+    items = []
+    for i, row in slice_df.iterrows():
+        items.append({
+            "rank": offset + i + 1,
+            "name": row.get("name"),
+            "bac": row.get("bac"),
+            "timestamp": row.get("timestamp")
+        })
+
+    return jsonify({"total": total, "items": items}), 200
 
 
 
