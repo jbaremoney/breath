@@ -34,6 +34,7 @@ def can_start_process():
     if can:
         return "READY"
     else:
+        print(mins)
         return f"WAIT {mins} MINUTES"
 
 

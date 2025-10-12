@@ -31,7 +31,7 @@ def check_long_enough(n: int = 15):
         if og_df.empty:
             return True, 0
         else:
-            latest_ts = time.time()
+            latest_ts = og_df["timestamp"].max()
             elapsed = int(time.time()) - latest_ts
 
             if elapsed <= n*60:  # 15 minutes = 900 seconds
