@@ -68,10 +68,8 @@ def should_start_blow():
     """
     with session_lock:
         if ACTIVE_SESSION and ACTIVE_SESSION.name and getattr(ACTIVE_SESSION, "name", None) and getattr(ACTIVE_SESSION, "bac", None) is None:
-            return "TRUE"
-        
-
-    return "FALSE"
+            return ("TRUE", 200, {"Content-Type": "text/plain", "Cache-Control": "no-store"})
+    return ("FALSE", 200, {"Content-Type": "text/plain", "Cache-Control": "no-store"})
 
 
 @app.route('/submit-bac', methods=['POST'])
