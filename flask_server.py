@@ -229,7 +229,6 @@ def blow_status():
     return response
 
 
-
 @app.route('/status')
 def status():
     """Check system status"""
