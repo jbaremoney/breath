@@ -145,5 +145,25 @@ def get_most_recent():
             return jsonify({"message": "No recent blows"}), 404
 
 
+@app.route('/leaderboard')
+def leaderboard():
+    """Display leaderboard as HTML table"""
+    try:
+        og_df = load_csv()
+
+        if "timestamp" in og_df:
+            og_df["time"] = pd.to_datetime(og_df["timestamp"], unit="s")
+
+        html_table = og_df[["name", "bac", "time"]].to_html(
+            index=False, float_format="%.3f"
+        )
+
+        return html_table, 200, {'Content-Type': 'text/html'}
+
+    except Exception as e:
+        return f"Error displaying leaderboard: {e}", 500
+
+
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8000)
